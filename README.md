@@ -11,7 +11,7 @@ This repo uses [STM32 UART DMA RX and TX](https://github.com/MaJerle/stm32-usart
 
 ## Usage Guide
 The user have to make a STM32 project using CubeMx, add nbiot.h/.c to the project and adapt the usart / interruptions files gererated by the CubeMX. 
-Add usart_init to Main loop and then call at_prod_init to start the parser API:
+Add nbiot_st_mch to Main loop to start the parser API:
 ```
 int main(void)
 {
@@ -46,6 +46,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while(1){
+    nbiot_st_mch();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
