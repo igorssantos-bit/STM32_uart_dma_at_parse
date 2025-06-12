@@ -30,18 +30,6 @@
 /* Variables -----------------------------------------------------------------*/
 extern huart_port_t huart_p3;
 extern uint32_t timestamp;
-extern ds18b20_t probe_1;
-extern ds18b20_t probe_2;
-extern sht4x_t sht;
-extern reset_t rst_cause;
-extern task_timer_t task_timer;
-extern const fw_version_t fw_version;
-extern st_battery_t v_bat;
-extern alert_t alert_tp1;
-extern alert_t alert_tp2;
-extern alert_t alert_ti;
-extern alert_t alert_ui;
-extern sensor_rb_t sensor_rb;
 
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 char cmd[NBIOT_CMD_SIZE] = {0};
