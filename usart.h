@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2025 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -30,65 +30,32 @@ extern "C" {
 
 /* USER CODE BEGIN Includes */
 #include "stdbool.h"
-#include "lwrb.h"
 
 /* USER CODE END Includes */
 
+extern UART_HandleTypeDef huart1;
+
+extern UART_HandleTypeDef huart3;
+
 /* USER CODE BEGIN Private defines */
+#define UART1_BUFFER_SIZE 64
+#define UART3_BUFFER_SIZE 2048
 
-/**
- * \brief           Calculate length of statically allocated array
- */
-#define ARRAY_LEN(x)            (sizeof(x) / sizeof((x)[0]))
-
-typedef struct {
-	uint8_t usart_rx_dma_buffer[64];
-	size_t old_pos;
-	lwrb_t usart_rx_rb;
-	uint8_t usart_rx_rb_data[256];
-} uart_rx_buffer_t;
+#define DEFAULT_UART_TIMEOUT 500
 
 typedef struct {
-	lwrb_t usart_tx_rb;
-	uint8_t usart_tx_rb_data[256];
-	size_t usart_tx_dma_current_len;
-} uart_tx_buffer_t;
+	UART_HandleTypeDef* p_huart;
+	volatile uint32_t* p_cndtr;
+	uint8_t* p_rxBuf;
+	uint16_t rxBufSize;
+	uint16_t rxPos;
+} huart_port_t;
 
-typedef struct {
-	/* UART config */
-	USART_TypeDef* uart;                        /*!< UART/USART/LPUART instance */
-    uint32_t baud_rate;
-	GPIO_TypeDef* uart_tx_port;
-    GPIO_TypeDef* uart_rx_port;
-    uint16_t uart_tx_pin;
-    uint16_t uart_rx_pin;
-    uint16_t uart_tx_pin_af;
-    uint16_t uart_rx_pin_af;
-	/* DMA config & flags management */
-    DMA_TypeDef* dma_rx;                        /*!< RX DMA instance */
-    uint32_t dma_rx_ch;                         /*!< RX DMA channel */
-    uint32_t dma_rx_req;                        /*!< RX DMA request */
-	DMA_TypeDef* dma_tx;                        /*!< TX DMA instance */
-    uint32_t dma_tx_ch;                         /*!< TX DMA channel */
-    uint32_t dma_tx_req;                        /*!< TX DMA request */
-	uint32_t (*dma_rx_is_ht_fn)(DMA_TypeDef *);
-	uint32_t (*dma_rx_is_tc_fn)(DMA_TypeDef *);
-    void (*dma_rx_clear_tc_fn)(DMA_TypeDef *);
-    void (*dma_rx_clear_ht_fn)(DMA_TypeDef *);
-    uint32_t (*dma_tx_is_tc_fn)(DMA_TypeDef *);
-    void (*dma_tx_clear_tc_fn)(DMA_TypeDef *);
-    void (*dma_tx_clear_ht_fn)(DMA_TypeDef *);
-    void (*dma_tx_clear_gi_fn)(DMA_TypeDef *);
-    void (*dma_tx_clear_te_fn)(DMA_TypeDef *);
-    /* Interrupts config */
-    uint8_t prio;                               /*!< Preemption priority number */
-    IRQn_Type uart_irq;                         /*!< UART IRQ instance */
-    IRQn_Type dma_rx_irq;                       /*!< DMA RX IRQ instance */
-    IRQn_Type dma_tx_irq;                       /*!< DMA RX IRQ instance */
-	/* Volatile data */
-	uart_rx_buffer_t* rx_data;                 	/*!< Pointer to volatile rx data */
-	uart_tx_buffer_t* tx_data;                 	/*!< Pointer to volatile tx data */
-} uart_handler_t;
+extern huart_port_t huart_p1;
+extern huart_port_t huart_p3;
+
+#define USER_HUART huart_p1
+#define NBIOT_HUART huart_p3
 
 /* USER CODE END Private defines */
 
@@ -96,13 +63,14 @@ void MX_USART1_UART_Init(void);
 void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-void usart_init(const uart_handler_t* uart);
-void usart_dma_irq_handler(const uart_handler_t* uart);
-void usart_irq_handler(const uart_handler_t* uart);
-void usart_rx_check(const uart_handler_t* uart);
-void usart_process_data(const uart_handler_t* uart, const void* data, size_t len);
-uint8_t usart_start_tx_dma_transfer(const uart_handler_t* uart);
-bool usart_send_string(const uart_handler_t* uart, const char* str, size_t len);
+void uart_deinit(huart_port_t* huart);
+void uart_wait_tx_done(huart_port_t* huart);
+void uart_write_byte(huart_port_t* huart, void *byte);
+void uart_write_string(huart_port_t* huart, void *p_buffer, uint16_t size);
+bool uart_read_byte(huart_port_t* huart, void *byte);
+bool uart_read_string(huart_port_t* huart, void *p_dest, size_t len);
+bool uart_peek(huart_port_t* huart, void *p_dest, size_t len);
+void uart_flush_rx(huart_port_t* huart);
 
 /* USER CODE END Prototypes */
 
